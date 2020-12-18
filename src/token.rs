@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 use std::collections::HashMap;
 
-#[derive(Debug,Eq, PartialEq, Clone, Hash)]
+#[derive(Debug, Eq, PartialEq, Clone, Hash)]
 pub enum TokenType {
     ILLEGAL,
     EOF,
@@ -13,6 +13,10 @@ pub enum TokenType {
     // Operators
     ASSIGN,
     PLUS,
+    MINUS,
+    BANG, // !
+    ASTERISK,
+    SLASH,
 
     // Delimeters
     COMMA,
@@ -22,16 +26,33 @@ pub enum TokenType {
     RPAREN,
     LBRACE,
     RBRACE,
+    LT,
+    GT,
 
     //Keywords
     FUNCTION,
     LET,
+    TRUE,
+    FALSE,
+    IF,
+    ELSE,
+    RETURN,
 }
 
-pub  fn lookup_ident(ident: &str) -> TokenType {
+pub fn lookup_ident(ident: &str) -> TokenType {
     //TODO: Move this out of function
-    let keywords: HashMap<&'static str, TokenType> = [("let", TokenType::LET), ("fn", TokenType::FUNCTION)]
-        .iter().cloned().collect();
+    let keywords: HashMap<&'static str, TokenType> = [
+        ("let", TokenType::LET),
+        ("fn", TokenType::FUNCTION),
+        ("true", TokenType::TRUE),
+        ("false", TokenType::FALSE),
+        ("if", TokenType::IF),
+        ("else", TokenType::ELSE),
+        ("return", TokenType::RETURN),
+    ]
+    .iter()
+    .cloned()
+    .collect();
 
     if keywords.contains_key(ident) {
         return keywords.get(ident).unwrap().clone();

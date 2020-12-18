@@ -40,6 +40,22 @@ impl Lexer {
                 type_token: TokenType::ASSIGN,
                 literal: self.ch.to_string(),
             },
+            '-' => Token {
+                type_token: TokenType::MINUS,
+                literal: self.ch.to_string(),
+            },
+            '!' => Token {
+                type_token: TokenType::BANG,
+                literal: self.ch.to_string(),
+            },
+            '*' => Token {
+                type_token: TokenType::ASTERISK,
+                literal: self.ch.to_string(),
+            },
+            '/' => Token {
+                type_token: TokenType::SLASH,
+                literal: self.ch.to_string(),
+            },
             ';' => Token {
                 type_token: TokenType::SEMICOLON,
                 literal: self.ch.to_string(),
@@ -68,22 +84,32 @@ impl Lexer {
                 type_token: TokenType::RBRACE,
                 literal: self.ch.to_string(),
             },
+            '<' => Token {
+                type_token: TokenType::LT,
+                literal: self.ch.to_string(),
+            },
+            '>' => Token {
+                type_token: TokenType::GT,
+                literal: self.ch.to_string(),
+            },
             '\0' => Token {
                 type_token: TokenType::EOF,
                 literal: String::new(),
             },
-            ch if ch.is_digit(10) => return Token {
-                type_token: TokenType::INT,
-                literal: Lexer::read_number(self),
-            },
+            ch if ch.is_digit(10) => {
+                return Token {
+                    type_token: TokenType::INT,
+                    literal: Lexer::read_number(self),
+                }
+            }
             //match identifier start
-            ch if Lexer::is_letter(ch) =>  {
+            ch if Lexer::is_letter(ch) => {
                 let literal = Lexer::read_identifier(self);
                 return Token {
                     type_token: token::lookup_ident(&literal),
                     literal,
-                }
-            },
+                };
+            }
             _ => Token {
                 type_token: TokenType::ILLEGAL,
                 literal: self.ch.to_string(),
@@ -121,7 +147,6 @@ impl Lexer {
             self.read_char();
         }
     }
-
 }
 
 #[cfg(test)]
@@ -178,21 +203,29 @@ mod tests {
         }
     }
 
-
     #[test]
     fn test_next_token32() {
-        let input = String::from("let five = 5;
+        let input = String::from(
+            "
+            let five = 5;
 let ten = 10;
    let add = fn(x, y) {
      x + y;
 };
    let result = add(five, ten);
-");
+!-/*5;
+   5 < 10 > 5;
+if ( 5 < 10 ) {
+    return true;
+} else {
+    return false;
+}
+",
+        );
         let result = vec![
             Token {
                 literal: "let".to_string(),
                 type_token: TokenType::LET,
-
             },
             Token {
                 type_token: TokenType::IDENT,
@@ -335,6 +368,121 @@ let ten = 10;
                 literal: ";".to_string(),
             },
             Token {
+                literal: "!".to_string(),
+                type_token: TokenType::BANG,
+            },
+            Token {
+                literal: "-".to_string(),
+                type_token: TokenType::MINUS,
+            },
+            Token {
+                literal: "/".to_string(),
+                type_token: TokenType::SLASH,
+            },
+            Token {
+                literal: "*".to_string(),
+                type_token: TokenType::ASTERISK,
+            },
+            Token {
+                literal: "5".to_string(),
+                type_token: TokenType::INT,
+            },
+            Token {
+                literal: ";".to_string(),
+                type_token: TokenType::SEMICOLON,
+            },
+            Token {
+                literal: "5".to_string(),
+                type_token: TokenType::INT,
+            },
+            Token {
+                literal: "<".to_string(),
+                type_token: TokenType::LT,
+            },
+            Token {
+                literal: "10".to_string(),
+                type_token: TokenType::INT,
+            },
+            Token {
+                literal: ">".to_string(),
+                type_token: TokenType::GT,
+            },
+            Token {
+                literal: "5".to_string(),
+                type_token: TokenType::INT,
+            },
+            Token {
+                literal: ";".to_string(),
+                type_token: TokenType::SEMICOLON,
+            },
+            Token {
+                literal: "if".to_string(),
+                type_token: TokenType::IF,
+            },
+            Token {
+                literal: "(".to_string(),
+                type_token: TokenType::LPAREN,
+            },
+            Token {
+                literal: "5".to_string(),
+                type_token: TokenType::INT,
+            },Token {
+                literal: "<".to_string(),
+                type_token: TokenType::LT,
+            },
+            Token {
+                literal: "10".to_string(),
+                type_token: TokenType::INT,
+            },
+            Token {
+                literal: ")".to_string(),
+                type_token: TokenType::RPAREN,
+            },
+            Token {
+                literal: "{".to_string(),
+                type_token: TokenType::LBRACE,
+            },
+            Token {
+                literal: "return".to_string(),
+                type_token: TokenType::RETURN,
+            },
+            Token {
+                literal: "true".to_string(),
+                type_token: TokenType::TRUE,
+            },
+            Token {
+                literal: ";".to_string(),
+                type_token: TokenType::SEMICOLON,
+            },
+            Token {
+                literal: "}".to_string(),
+                type_token: TokenType::RBRACE,
+            },
+            Token {
+                literal: "else".to_string(),
+                type_token: TokenType::ELSE,
+            },
+            Token {
+                literal: "{".to_string(),
+                type_token: TokenType::LBRACE,
+            },
+            Token {
+                literal: "return".to_string(),
+                type_token: TokenType::RETURN,
+            },
+            Token {
+                literal: "false".to_string(),
+                type_token: TokenType::FALSE,
+            },
+            Token {
+                literal: ";".to_string(),
+                type_token: TokenType::SEMICOLON,
+            },
+            Token {
+                literal: "}".to_string(),
+                type_token: TokenType::RBRACE,
+            },
+            Token {
                 type_token: TokenType::EOF,
                 literal: String::new(),
             },
@@ -347,5 +495,4 @@ let ten = 10;
             assert_eq!(tok.literal, e.literal);
         }
     }
-
 }
