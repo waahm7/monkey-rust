@@ -56,7 +56,7 @@ impl Lexer {
                         literal: self.ch.to_string(),
                     }
                 }
-            },
+            }
             '-' => Token {
                 type_token: TokenType::MINUS,
                 literal: self.ch.to_string(),
@@ -74,7 +74,7 @@ impl Lexer {
                         literal: self.ch.to_string(),
                     }
                 }
-            },
+            }
             '*' => Token {
                 type_token: TokenType::ASTERISK,
                 literal: self.ch.to_string(),
@@ -455,7 +455,8 @@ if ( 5 < 10 ) {
             Token {
                 literal: "5".to_string(),
                 type_token: TokenType::INT,
-            },Token {
+            },
+            Token {
                 literal: "<".to_string(),
                 type_token: TokenType::LT,
             },
