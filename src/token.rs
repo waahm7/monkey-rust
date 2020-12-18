@@ -17,6 +17,8 @@ pub enum TokenType {
     BANG, // !
     ASTERISK,
     SLASH,
+    EQ, // ==
+    NotEq,
 
     // Delimeters
     COMMA,

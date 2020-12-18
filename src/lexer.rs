@@ -31,22 +31,49 @@ impl Lexer {
         self.read_pos += 1;
     }
 
+    pub fn peek_char(&mut self) -> char {
+        if self.read_pos >= self.input.len() {
+            return '\0';
+        }
+        return self.input.chars().nth(self.read_pos).unwrap();
+    }
+
     pub fn next_token(&mut self) -> Token {
         //ignore spaces
         Lexer::skip_whitespace(self);
 
         let tok = match self.ch {
-            '=' => Token {
-                type_token: TokenType::ASSIGN,
-                literal: self.ch.to_string(),
+            '=' => {
+                if self.peek_char() == '=' {
+                    self.read_char();
+                    Token {
+                        type_token: TokenType::EQ,
+                        literal: String::from("=="),
+                    }
+                } else {
+                    Token {
+                        type_token: TokenType::ASSIGN,
+                        literal: self.ch.to_string(),
+                    }
+                }
             },
             '-' => Token {
                 type_token: TokenType::MINUS,
                 literal: self.ch.to_string(),
             },
-            '!' => Token {
-                type_token: TokenType::BANG,
-                literal: self.ch.to_string(),
+            '!' => {
+                if self.peek_char() == '=' {
+                    self.read_char();
+                    Token {
+                        type_token: TokenType::NotEq,
+                        literal: String::from("!="),
+                    }
+                } else {
+                    Token {
+                        type_token: TokenType::BANG,
+                        literal: self.ch.to_string(),
+                    }
+                }
             },
             '*' => Token {
                 type_token: TokenType::ASTERISK,
@@ -220,6 +247,8 @@ if ( 5 < 10 ) {
 } else {
     return false;
 }
+==
+!=
 ",
         );
         let result = vec![
@@ -481,6 +510,14 @@ if ( 5 < 10 ) {
             Token {
                 literal: "}".to_string(),
                 type_token: TokenType::RBRACE,
+            },
+            Token {
+                literal: "==".to_string(),
+                type_token: TokenType::EQ,
+            },
+            Token {
+                literal: "!=".to_string(),
+                type_token: TokenType::NotEq,
             },
             Token {
                 type_token: TokenType::EOF,
