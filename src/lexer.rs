@@ -2,7 +2,7 @@
 
 use crate::token::{self, Token, TokenType};
 use std::vec::Vec;
-struct Lexer {
+pub struct Lexer {
     input: String,
     position: usize,
     read_pos: usize,

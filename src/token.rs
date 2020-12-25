@@ -62,8 +62,9 @@ pub fn lookup_ident(ident: &str) -> TokenType {
     TokenType::IDENT
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Token {
     pub type_token: TokenType,
     pub literal: String,
 }
+
