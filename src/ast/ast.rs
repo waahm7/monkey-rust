@@ -2,22 +2,21 @@ use std::fmt::{Display, Result};
 use std::fmt::Formatter;
 use std::vec::Vec;
 
-use crate::parser::parser::Parser;
+use crate::parser::parser::{Parser, ParseResult};
 use crate::token::{Token, TokenType};
 
-#[allow(dead_code)]
-pub enum Node {
-    Program(Box<Program>),
-    Statement(Box<Statement>),
-    Expression(Box<Expression>),
-}
+// pub enum Node {
+//     Program(Box<Program>),
+//     Statement(Box<Statement>),
+//     Expression(Box<Expression>),
+// }
 
-impl Node {}
-
+// impl Node {}
+//
 pub enum Statement {
     Let(Box<LetStatement>),
     Return(Box<ReturnStatement>),
-    Express(Box<ExpressionStatement>),
+    Expression(Box<ExpressionStatement>),
 }
 
 impl Display for Statement {
@@ -25,7 +24,7 @@ impl Display for Statement {
         let s = match self {
             Statement::Let(stmt) => format!("{}", stmt),
             Statement::Return(ret) => format!("{}", ret),
-            Statement::Express(exp) => format!("{}", exp),
+            Statement::Expression(exp) => format!("{}", exp),
         };
         write!(f, "{}", s)
     }
@@ -34,15 +33,32 @@ impl Display for Statement {
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub enum Expression {
     Identifier(String),
+    Integer(i64),
+}
+
+impl Expression {
+    pub fn string(&self) -> String {
+        match self {
+            Expression::Identifier(s) => s.clone(),
+            Expression::Integer(i) => i.to_string(),
+        }
+    }
 }
 
 impl Display for Expression {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        match self {
-            Expression::Identifier(str) => { write!(f, "{}", str)?; }
-            _ => {}
-        };
-        Ok(())
+        write!(f, "{}", self.string())
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+pub struct ExpressionStatement {
+    pub expression: Expression,
+}
+
+impl Display for ExpressionStatement {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        write!(f, "{}", self.expression)
     }
 }
 
@@ -61,10 +77,10 @@ impl Program {
     pub fn parse_program(&mut self, parser: &mut Parser) {
         self.statements = Vec::new();
         while parser.cur_token.type_token != TokenType::EOF {
-            let statement: Option<Statement> = parser.parse_statement();
+            let statement: ParseResult<Statement> = parser.parse_statement();
             match statement {
-                None => {}
-                Some(x) => {
+                Err(_) => {}
+                Ok(x) => {
                     self.statements.push(x);
                 }
             }
@@ -85,8 +101,8 @@ impl Display for Program {
 
 pub struct LetStatement {
     pub token: Token,
-    pub name: Identifier,
-    pub value: Expression,
+    pub name: IdentifierExpression,
+    pub value: ExpressionStatement,
 }
 
 impl Display for LetStatement {
@@ -102,7 +118,7 @@ impl Display for LetStatement {
 
 pub struct ReturnStatement {
     pub token: Token,
-    pub return_value: Expression,
+    pub return_value: ExpressionStatement,
 }
 
 impl Display for ReturnStatement {
@@ -115,23 +131,27 @@ impl Display for ReturnStatement {
 }
 
 
-pub struct ExpressionStatement {
-    pub token: Token,
-    pub expression: Expression,
-}
+// pub struct ExpressionStatement {
+//     pub token: Token,
+//     pub expression: Expression,
+// }
+//
+// impl Display for ExpressionStatement {
+//     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+//         write!(f, "{}", self.expression)
+//     }
+// }
+// pub struct IntegerLiteral {
+//     pub token: Token,
+//     pub value: i64,
+// }
 
-impl Display for ExpressionStatement {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        write!(f, "{}", self.expression)
-    }
-}
-
-pub struct Identifier {
+pub struct IdentifierExpression {
     pub token: Token,
     pub value: String,
 }
 
-impl Display for Identifier {
+impl Display for IdentifierExpression {
     fn fmt(&self, _f: &mut Formatter<'_>) -> Result {
         Ok(()) //Todo:
     }
@@ -147,8 +167,8 @@ mod tests {
         let program = Program {
             statements: vec![Statement::Let(Box::new(LetStatement {
                 token: Token { type_token: TokenType::LET, literal: "let".to_string() },
-                name: Identifier { token: Token { type_token: TokenType::IDENT, literal: "myVar".to_string() }, value: "myVar".to_string() },
-                value: Expression::Identifier("anotherVar".to_string()),
+                name: IdentifierExpression { token: Token { type_token: TokenType::IDENT, literal: "myVar".to_string() }, value: "myVar".to_string() },
+                value: ExpressionStatement{expression: Expression::Identifier("anotherVar".to_string())},
             }))]
         };
 
