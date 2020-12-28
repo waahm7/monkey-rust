@@ -1,8 +1,8 @@
-use std::fmt::{Display, Result};
 use std::fmt::Formatter;
+use std::fmt::{Display, Result};
 use std::vec::Vec;
 
-use crate::parser::parser::{Parser, ParseResult};
+use crate::parser::parser::{ParseResult, Parser};
 use crate::token::{Token, TokenType};
 
 // pub enum Node {
@@ -34,6 +34,9 @@ impl Display for Statement {
 pub enum Expression {
     Identifier(String),
     Integer(i64),
+    Prefix(Box<PrefixExpression>),
+    Infix(Box<InfixExpression>),
+    Boolean(bool),
 }
 
 impl Expression {
@@ -41,6 +44,9 @@ impl Expression {
         match self {
             Expression::Identifier(s) => s.clone(),
             Expression::Integer(i) => i.to_string(),
+            Expression::Prefix(i) => i.to_string(),
+            Expression::Infix(i) => i.to_string(),
+            Expression::Boolean(i) => i.to_string(),
         }
     }
 }
@@ -48,6 +54,31 @@ impl Expression {
 impl Display for Expression {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         write!(f, "{}", self.string())
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+pub struct InfixExpression {
+    pub left: Expression,
+    pub operator: String,
+    pub right: Expression,
+}
+
+impl Display for InfixExpression {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        write!(f, "({} {} {})", self.left, self.operator, self.right)
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+pub struct PrefixExpression {
+    pub operator: String,
+    pub right: Expression,
+}
+
+impl Display for PrefixExpression {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        write!(f, "({}{})", self.operator, self.right)
     }
 }
 
@@ -65,7 +96,6 @@ impl Display for ExpressionStatement {
 pub struct Program {
     pub statements: Vec<Statement>,
 }
-
 
 impl Program {
     pub fn new() -> Program {
@@ -98,7 +128,6 @@ impl Display for Program {
     }
 }
 
-
 pub struct LetStatement {
     pub token: Token,
     pub name: IdentifierExpression,
@@ -130,7 +159,6 @@ impl Display for ReturnStatement {
     }
 }
 
-
 // pub struct ExpressionStatement {
 //     pub token: Token,
 //     pub expression: Expression,
@@ -157,7 +185,6 @@ impl Display for IdentifierExpression {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -166,12 +193,23 @@ mod tests {
     fn test_string() {
         let program = Program {
             statements: vec![Statement::Let(Box::new(LetStatement {
-                token: Token { type_token: TokenType::LET, literal: "let".to_string() },
-                name: IdentifierExpression { token: Token { type_token: TokenType::IDENT, literal: "myVar".to_string() }, value: "myVar".to_string() },
-                value: ExpressionStatement{expression: Expression::Identifier("anotherVar".to_string())},
-            }))]
+                token: Token {
+                    type_token: TokenType::LET,
+                    literal: "let".to_string(),
+                },
+                name: IdentifierExpression {
+                    token: Token {
+                        type_token: TokenType::IDENT,
+                        literal: "myVar".to_string(),
+                    },
+                    value: "myVar".to_string(),
+                },
+                value: ExpressionStatement {
+                    expression: Expression::Identifier("anotherVar".to_string()),
+                },
+            }))],
         };
 
-       assert_eq!(program.to_string(), "let myVar = anotherVar;");
+        assert_eq!(program.to_string(), "let myVar = anotherVar;");
     }
 }

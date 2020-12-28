@@ -1,6 +1,6 @@
-use crate::token::{TokenType};
-use crate::lexer::{Lexer};
-use std::io::{stdin};
+use crate::lexer::Lexer;
+use crate::token::TokenType;
+use std::io::stdin;
 #[allow(dead_code)]
 
 const PROMPT: &str = ">> ";
@@ -19,7 +19,7 @@ pub fn start() {
         let mut lexer = Lexer::new(line);
         let mut token = lexer.next_token();
         while token.type_token != TokenType::EOF {
-            println!("{:?}",token);
+            println!("{:?}", token);
             token = lexer.next_token();
         }
     }

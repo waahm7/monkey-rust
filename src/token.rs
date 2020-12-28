@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 use std::collections::HashMap;
+use std::fmt::{Display, Formatter, Result};
 
 #[derive(Debug, Eq, PartialEq, Clone, Hash)]
 pub enum TokenType {
@@ -62,9 +63,20 @@ pub fn lookup_ident(ident: &str) -> TokenType {
     TokenType::IDENT
 }
 
+impl Display for TokenType {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        write!(f, "{:?}", self)
+    }
+}
+
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Token {
     pub type_token: TokenType,
     pub literal: String,
 }
 
+impl Display for Token {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        write!(f, "{} {}", self.type_token, self.literal)
+    }
+}
