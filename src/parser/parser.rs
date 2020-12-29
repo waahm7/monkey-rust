@@ -2,11 +2,9 @@
 
 use std::collections::HashMap;
 use std::num::ParseIntError;
+use std::fmt::Debug; // Debug is located at std::fmt::Debug. So now we can just write 'Debug'.
 
-use crate::ast::ast::{
-    Expression, IdentifierExpression, LetStatement, PrefixExpression, Program, ReturnStatement,
-    Statement,
-};
+use crate::ast::ast::{Expression, IdentifierExpression, LetStatement, PrefixExpression, Program, ReturnStatement, Statement, IfExpression, BlockStatement};
 use crate::ast::ast::{ExpressionStatement, InfixExpression};
 use crate::lexer::Lexer;
 use crate::token::{Token, TokenType};
@@ -193,12 +191,63 @@ impl Parser {
             TokenType::TRUE | TokenType::FALSE => {
                 return Some(Parser::parse_boolean);
             }
-            TokenType::IF => {}
+            TokenType::IF => {return Some(Parser::parse_if);}
             TokenType::ELSE => {}
             TokenType::RETURN => {}
         }
 
         None
+    }
+
+    fn parse_if(&mut self) -> ParseResult<Expression> {
+
+
+        if !self.expect_peek(&TokenType::LPAREN) {
+            return Err(format!("( not found in if statement"));
+        }
+
+        self.next_token();
+        let condition = self.parse_expression(Precedence::Lowest)?;
+
+        if !self.expect_peek(&TokenType::RPAREN) {
+            return Err(format!(") not found in if statement"));
+        }
+        if !self.expect_peek(&TokenType::LBRACE) {
+            return Err(format!("{{ not found in if statement"));
+        }
+
+        let consequence = self.parse_block_statement();
+
+        let mut alternative: Option<BlockStatement> = None;
+
+        if self.peek_token_is(&TokenType::ELSE) {
+            self.next_token();
+
+            if !self.expect_peek(&TokenType::LBRACE) {
+                return Err(format!("{{ not found in else statement"));
+            }
+
+            alternative = Some(self.parse_block_statement());
+        }
+
+        return Ok(Expression::If(Box::new(IfExpression {
+            condition,
+            consequence,
+            alternative,
+        })))
+    }
+
+    fn parse_block_statement(&mut self) -> BlockStatement {
+        let mut statements= Vec::new();
+        self.next_token();
+        while !self.cur_token_is(&TokenType::RBRACE) && !self.cur_token_is(&TokenType::EOF) {
+            if let Ok(stmt) = self.parse_statement() {
+                statements.push(stmt);
+            }
+            self.next_token();
+        }
+
+        BlockStatement { statements }
     }
 
     fn parse_grouped_expression(&mut self) -> ParseResult<Expression> {
@@ -330,6 +379,133 @@ mod tests {
     use crate::ast::ast::Expression;
 
     use super::*;
+    #[test]
+    fn parse_if_else_expressions() {
+        let input = "if (x < y) { x } else { y }";
+        let lexer = Lexer::new(input.to_string());
+        let mut parser = Parser::new(lexer);
+        let mut program = Program::new();
+        program.parse_program(&mut parser);
+        check_parse_errors(&parser);
+
+        if program.statements.len() != 1 {
+            panic!("Program statements length is not 1.")
+        }
+
+        let stmt = program.statements.get(0).unwrap();
+        let stmt = match stmt {
+            Statement::Expression(st) => (*st).deref(),
+            _ => panic!("Not a expression statement;"),
+        };
+
+        let if_statement = match &stmt.expression {
+            Expression::If(exp) => (*exp).deref(),
+            _ => panic!("not an if statement"),
+        };
+
+        //test infix expression
+        let infix_statement = match &if_statement.condition {
+            Expression::Infix(ident) => (*ident).deref(),
+            _ => panic!("not a prefix statement"),
+        };
+        let left_expression = match &infix_statement.left {
+            Expression::Identifier(x) => x,
+            _ => panic!("left is not a identifier."),
+        };
+        let right_expression = match &infix_statement.right {
+            Expression::Identifier(x) => x,
+            _ => panic!("right is not a identifier."),
+        };
+
+        assert_eq!("x", *left_expression);
+        assert_eq!("<", infix_statement.operator);
+        assert_eq!("y", *right_expression);
+
+        let stmt = match &if_statement.consequence.statements.get(0).unwrap() {
+            Statement::Expression(st) => (*st).deref(),
+            _ => panic!("Not a expression statement;"),
+        };
+
+        let consequence = match &stmt.expression {
+            Expression::Identifier(ident) => ident,
+            _ => panic!("not an identifier"),
+        };
+
+        assert_eq!("x", *consequence);
+
+        let alternative = match &if_statement.alternative {
+            None => { panic! ("Alternative not present.")}
+            Some(x) => { x }
+        };
+
+        let stmt = match &alternative.statements.get(0).unwrap() {
+            Statement::Expression(st) => (*st).deref(),
+            _ => panic!("Not a expression statement;"),
+        };
+
+        let expression = match &stmt.expression {
+            Expression::Identifier(x) => x,
+            _ => panic!("right is not a identifier."),
+        };
+
+        assert_eq!("y", expression);
+    }
+
+    #[test]
+    fn parse_if_expressions() {
+        let input = "if (x < y) { x }";
+        let lexer = Lexer::new(input.to_string());
+        let mut parser = Parser::new(lexer);
+        let mut program = Program::new();
+        program.parse_program(&mut parser);
+        check_parse_errors(&parser);
+
+        if program.statements.len() != 1 {
+            panic!("Program statements length is not 1.")
+        }
+
+        let stmt = program.statements.get(0).unwrap();
+        let stmt = match stmt {
+            Statement::Expression(st) => (*st).deref(),
+            _ => panic!("Not a expression statement;"),
+        };
+
+        let if_statement = match &stmt.expression {
+            Expression::If(exp) => (*exp).deref(),
+            _ => panic!("not an if statement"),
+        };
+
+        //test infix expression
+        let infix_statement = match &if_statement.condition {
+            Expression::Infix(ident) => (*ident).deref(),
+            _ => panic!("not a prefix statement"),
+        };
+        let left_expression = match &infix_statement.left {
+            Expression::Identifier(x) => x,
+            _ => panic!("left is not a identifier."),
+        };
+        let right_expression = match &infix_statement.right {
+            Expression::Identifier(x) => x,
+            _ => panic!("right is not a identifier."),
+        };
+
+        assert_eq!("x", *left_expression);
+        assert_eq!("<", infix_statement.operator);
+        assert_eq!("y", *right_expression);
+
+        let stmt = match &if_statement.consequence.statements.get(0).unwrap() {
+            Statement::Expression(st) => (*st).deref(),
+            _ => panic!("Not a expression statement;"),
+        };
+
+        let ident_consequence = match &stmt.expression {
+            Expression::Identifier(ident) => ident,
+            _ => panic!("not an identifier"),
+        };
+
+        assert_eq!("x", *ident_consequence);
+
+    }
 
     #[test]
     fn operator_precedence_parsing() {
@@ -394,32 +570,29 @@ mod tests {
                 Statement::Expression(st) => (*st).deref(),
                 _ => panic!("Not a expression statement;"),
             };
-
-            let prefix_statement = match &stmt.expression {
+            let infix_statement = match &stmt.expression {
                 Expression::Infix(ident) => (*ident).deref(),
                 _ => panic!("not a prefix statement"),
             };
-            let left_expression = match &prefix_statement.left {
+            let left_expression = match &infix_statement.left {
                 Expression::Integer(x) => x,
                 _ => panic!("left is not a integer."),
             };
-            let right_expression = match &prefix_statement.right {
+            let right_expression = match &infix_statement.right {
                 Expression::Integer(x) => x,
                 _ => panic!("right is not a integer."),
             };
 
             assert_eq!(left, *left_expression);
-            assert_eq!(operator, prefix_statement.operator);
+            assert_eq!(operator, infix_statement.operator);
             assert_eq!(right, *right_expression);
         }
     }
 
+
     #[test]
     fn parse_prefix_boolean_expressions() {
-        let prefix_tests = vec![
-            ("!true", "!", true),
-            ("!false", "!", false),
-        ];
+        let prefix_tests = vec![("!true", "!", true), ("!false", "!", false)];
         for (input, operator, value) in prefix_tests {
             let lexer = Lexer::new(input.to_string());
             let mut parser = Parser::new(lexer);
@@ -452,13 +625,9 @@ mod tests {
         }
     }
 
-
     #[test]
     fn parse_prefix_expressions() {
-        let prefix_tests = vec![
-            ("!5;", "!", 5),
-            ("-15;", "-", 15),
-        ];
+        let prefix_tests = vec![("!5;", "!", 5), ("-15;", "-", 15)];
         for (input, operator, int_value) in prefix_tests {
             let lexer = Lexer::new(input.to_string());
             let mut parser = Parser::new(lexer);

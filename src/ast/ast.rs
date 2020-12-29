@@ -30,13 +30,13 @@ impl Display for Statement {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub enum Expression {
     Identifier(String),
     Integer(i64),
     Prefix(Box<PrefixExpression>),
     Infix(Box<InfixExpression>),
     Boolean(bool),
+    If(Box<IfExpression>),
 }
 
 impl Expression {
@@ -47,6 +47,7 @@ impl Expression {
             Expression::Prefix(i) => i.to_string(),
             Expression::Infix(i) => i.to_string(),
             Expression::Boolean(i) => i.to_string(),
+            Expression::If(i) => i.to_string(),
         }
     }
 }
@@ -57,7 +58,47 @@ impl Display for Expression {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+pub struct FunctionalLiteral {
+    pub parameters: Vec<IdentifierExpression>,
+    pub body: BlockStatement,
+}
+
+impl Display for FunctionLiteral {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        let param_list: Vec<String> = (&self.parameters).into_iter().map(|p| p.to_string()).collect();
+        write!(f, "({}) {}", param_list.join(", "), self.body)
+    }
+}
+
+pub struct IfExpression {
+    pub condition: Expression,
+    pub consequence: BlockStatement,
+    pub alternative: Option<BlockStatement>,
+}
+
+impl Display for IfExpression {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        write!(f, "if {} {}", self.condition, self.consequence)?;
+        if let Some(alt) = &self.alternative {
+            write!(f,"else {}", alt)?;
+        }
+        Ok(())
+    }
+}
+
+pub struct BlockStatement {
+    pub statements: Vec<Statement>,
+}
+
+impl Display for BlockStatement {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        for statement in self.statements.iter() {
+            write!(f, "{}", statement)?;
+        }
+        Ok(())
+    }
+}
+
 pub struct InfixExpression {
     pub left: Expression,
     pub operator: String,
@@ -70,7 +111,6 @@ impl Display for InfixExpression {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct PrefixExpression {
     pub operator: String,
     pub right: Expression,
@@ -82,7 +122,6 @@ impl Display for PrefixExpression {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct ExpressionStatement {
     pub expression: Expression,
 }
@@ -181,7 +220,7 @@ pub struct IdentifierExpression {
 
 impl Display for IdentifierExpression {
     fn fmt(&self, _f: &mut Formatter<'_>) -> Result {
-        Ok(()) //Todo:
+        write!(f, "{}", self.value)
     }
 }
 
