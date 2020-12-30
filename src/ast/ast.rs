@@ -38,6 +38,7 @@ pub enum Expression {
     Boolean(bool),
     If(Box<IfExpression>),
     Fn(Box<FunctionLiteral>),
+    Call(Box<CallExpression>),
 }
 
 impl Expression {
@@ -50,6 +51,7 @@ impl Expression {
             Expression::Boolean(i) => i.to_string(),
             Expression::If(i) => i.to_string(),
             Expression::Fn(i) => i.to_string(),
+            Expression::Call(i) => i.to_string(),
         }
     }
 }
@@ -57,6 +59,18 @@ impl Expression {
 impl Display for Expression {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         write!(f, "{}", self.string())
+    }
+}
+
+pub struct CallExpression {
+    pub function: Expression,
+    pub arguments: Vec<Expression>,
+}
+
+impl Display for CallExpression {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        let arg_list: Vec<String> = (&self.arguments).into_iter().map(|exp| exp.to_string()).collect();
+        write!(f, "{}({})", self.function.to_string(), arg_list.join(", "))
     }
 }
 

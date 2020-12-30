@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use std::num::ParseIntError;
 use std::fmt::Debug; // Debug is located at std::fmt::Debug. So now we can just write 'Debug'.
 
-use crate::ast::ast::{Expression, IdentifierExpression, LetStatement, PrefixExpression, Program, ReturnStatement, Statement, IfExpression, BlockStatement, FunctionLiteral};
+use crate::ast::ast::{Expression, IdentifierExpression, LetStatement, PrefixExpression, Program, ReturnStatement, Statement, IfExpression, BlockStatement, FunctionLiteral, CallExpression};
 use crate::ast::ast::{ExpressionStatement, InfixExpression};
 use crate::lexer::Lexer;
 use crate::token::{Token, TokenType};
@@ -131,8 +131,39 @@ impl Parser {
             TokenType::NotEq => Some(Parser::parse_infix_expression),
             TokenType::LT => Some(Parser::parse_infix_expression),
             TokenType::GT => Some(Parser::parse_infix_expression),
+            TokenType::LPAREN => Some(Parser::parse_call_expression),
+
             _ => None,
         };
+    }
+
+    fn parse_call_expression(&mut self, function : Expression) -> ParseResult<Expression> {
+        let arguments = self.parse_call_arguments()?;
+        Ok(Expression::Call(Box::new(CallExpression { function , arguments })))
+    }
+
+    fn parse_call_arguments(&mut self) -> ParseResult<Vec<Expression>> {
+        let mut parameters = Vec::new();
+        if self.peek_token_is(&TokenType::RPAREN) {
+            self.next_token();
+            return Ok(parameters);
+        }
+        self.next_token();
+        parameters.push(self.parse_expression(Precedence::Lowest)?);
+
+        while self.peek_token_is(&TokenType::COMMA) {
+            self.next_token();
+            self.next_token();
+            parameters.push(self.parse_expression(Precedence::Lowest)? );
+        }
+
+        if !self.expect_peek(&TokenType::RPAREN) {
+            return Err(format!(") not found in fn parameters"));
+        }
+
+        Ok(parameters)
+
+
     }
 
     fn parse_infix_expression(&mut self, left: Expression) -> ParseResult<Expression> {
@@ -418,6 +449,49 @@ mod tests {
 
     use super::*;
 
+
+    #[test]
+    fn call_expression() {
+        let input = "add(1, 2 * 3, 4 + 5);";
+        let lexer = Lexer::new(input.to_string());
+        let mut parser = Parser::new(lexer);
+        let mut program = Program::new();
+        program.parse_program(&mut parser);
+        check_parse_errors(&parser);
+
+        if program.statements.len() != 1 {
+            panic!("Program statements length is not 1.")
+        }
+
+        let stmt = program.statements.get(0).unwrap();
+        let exp = match stmt {
+            Statement::Expression(st) => (*st).deref(),
+            _ => panic!("Not a expression statement;"),
+        };
+
+        match &exp.expression {
+            Expression::Call(call) => {
+                test_identifier(&call.function, "add");
+                assert_eq!(call.arguments.len(), 3);
+                let mut args = (&call.arguments).into_iter();
+                test_integer_literal(&args.next().unwrap(), 1);
+                test_infix(&args.next().unwrap(), 2, "*", 3);
+                test_infix(&args.next().unwrap(), 4, "+", 5)
+            },
+            _ => panic!("{} is not a call expression", exp)
+        }
+    }
+
+    fn test_infix(exp: &Expression, left: i64, op: &str, right: i64) {
+        match exp {
+            Expression::Infix(infix) => {
+                assert_eq!(op.to_string(), infix.operator, "expected {} operator but got {}", op, infix.operator);
+                test_integer_literal(&infix.left, left);
+                test_integer_literal(&infix.right, right);
+            }
+            exp => panic!("expected prefix expression but got {}", exp)
+        }
+    }
 
     #[test]
     fn parse_fn_parameters(){
@@ -944,6 +1018,28 @@ mod tests {
         }
 
         return true;
+    }
+
+
+    fn test_integer_literal(exp: &Expression, value: i64) {
+        match exp {
+            Expression::Integer(int) => assert_eq!(value, *int, "expected {} but got {}", value, int),
+            _ => panic!("expected integer literal {} but got {}", value, exp)
+        }
+    }
+
+    fn test_boolean_literal(exp: &Expression, value: bool) {
+        match exp {
+            Expression::Boolean(val) => assert_eq!(value, *val, "expected {} but got {}", value, val),
+            _ => panic!("expected boolean literal {} but got {}", value, exp)
+        }
+    }
+
+    fn test_identifier(exp: &Expression, value: &str) {
+        match exp {
+            Expression::Identifier(ident) => assert_eq!(value, ident, "expected {} but got {}", value, ident),
+            _ => panic!("expected identifier expression but got {}", exp)
+        }
     }
 
     fn check_parse_errors(parser: &Parser) {
