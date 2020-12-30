@@ -265,7 +265,7 @@ mod tests {
                     },
                     value: "myVar".to_string(),
                 },
-                value:  Expression::Identifier("anotherVar".to_string()),
+                value: Expression::Identifier("anotherVar".to_string()),
             }))],
         };
 

@@ -994,8 +994,8 @@ mod tests {
         if program.statements.len() != 3 {
             panic!("Program statements length is not 3.")
         }
-        let result: Vec<i64> = vec![5,10,993322];
-        for (i,statement) in program.statements.iter().enumerate() {
+        let result: Vec<i64> = vec![5, 10, 993322];
+        for (i, statement) in program.statements.iter().enumerate() {
             match statement {
                 Statement::Return(st) => {
                     assert_eq!(st.token.literal, "return");
@@ -1024,7 +1024,7 @@ mod tests {
         if program.statements.len() != 3 {
             panic!("Program statements length is not 3.")
         }
-        let tests = vec![("x",5), ("y",10), ("foobar",15)];
+        let tests = vec![("x", 5), ("y", 10), ("foobar", 15)];
         for (i, e) in tests.iter().enumerate() {
             let statement = program.statements.get(i).unwrap();
             let let_stmt = match statement {
@@ -1038,7 +1038,6 @@ mod tests {
     }
 
     fn test_let_statement(let_stmt: &LetStatement, name: &str) -> bool {
-
         if let_stmt.token.literal != "let" {
             panic!("token literal not let");
         }

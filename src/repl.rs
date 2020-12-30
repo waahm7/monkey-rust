@@ -1,8 +1,8 @@
+use crate::ast::ast::Program;
 use crate::lexer::Lexer;
+use crate::parser::parser::Parser;
 use crate::token::TokenType;
 use std::io::stdin;
-use crate::parser::parser::Parser;
-use crate::ast::ast::Program;
 
 #[allow(dead_code)]
 
@@ -10,7 +10,7 @@ const PROMPT: &str = ">> ";
 
 pub fn start() {
     loop {
-        println!("{}",PROMPT);
+        println!("{}", PROMPT);
         let mut line = String::new();
         match stdin().read_line(&mut line) {
             Ok(0) => break,
@@ -25,9 +25,9 @@ pub fn start() {
         let mut program = Program::new();
         program.parse_program(&mut parser);
         if parser.errors.len() > 0 {
-            println!("{:?}",parser.errors);
+            println!("{:?}", parser.errors);
             continue;
         }
-        println!("{}",program.to_string());
+        println!("{}", program.to_string());
     }
 }
