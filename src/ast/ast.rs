@@ -69,7 +69,10 @@ pub struct CallExpression {
 
 impl Display for CallExpression {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        let arg_list: Vec<String> = (&self.arguments).into_iter().map(|exp| exp.to_string()).collect();
+        let arg_list: Vec<String> = (&self.arguments)
+            .into_iter()
+            .map(|exp| exp.to_string())
+            .collect();
         write!(f, "{}({})", self.function.to_string(), arg_list.join(", "))
     }
 }
@@ -81,7 +84,10 @@ pub struct FunctionLiteral {
 
 impl Display for FunctionLiteral {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        let param_list: Vec<String> = (&self.parameters).into_iter().map(|p| p.to_string()).collect();
+        let param_list: Vec<String> = (&self.parameters)
+            .into_iter()
+            .map(|p| p.to_string())
+            .collect();
         write!(f, "({}) {}", param_list.join(", "), self.body)
     }
 }
@@ -96,7 +102,7 @@ impl Display for IfExpression {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         write!(f, "if {} {}", self.condition, self.consequence)?;
         if let Some(alt) = &self.alternative {
-            write!(f,"else {}", alt)?;
+            write!(f, "else {}", alt)?;
         }
         Ok(())
     }
@@ -186,7 +192,7 @@ impl Display for Program {
 pub struct LetStatement {
     pub token: Token,
     pub name: IdentifierExpression,
-    pub value: ExpressionStatement,
+    pub value: Expression,
 }
 
 impl Display for LetStatement {
@@ -194,7 +200,7 @@ impl Display for LetStatement {
         write!(f, "{} ", self.token.literal)?;
         write!(f, "{}", self.name.value)?;
         write!(f, " = ")?;
-        write!(f, "{}", self.value)?; //Todo: why value can be nil page: 50
+        write!(f, "{}", self.value)?;
         write!(f, ";")?;
         Ok(())
     }
@@ -202,7 +208,7 @@ impl Display for LetStatement {
 
 pub struct ReturnStatement {
     pub token: Token,
-    pub return_value: ExpressionStatement,
+    pub return_value: Expression,
 }
 
 impl Display for ReturnStatement {
@@ -259,9 +265,7 @@ mod tests {
                     },
                     value: "myVar".to_string(),
                 },
-                value: ExpressionStatement {
-                    expression: Expression::Identifier("anotherVar".to_string()),
-                },
+                value:  Expression::Identifier("anotherVar".to_string()),
             }))],
         };
 
