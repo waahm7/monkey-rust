@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use std::num::ParseIntError;
 use std::fmt::Debug; // Debug is located at std::fmt::Debug. So now we can just write 'Debug'.
 
-use crate::ast::ast::{Expression, IdentifierExpression, LetStatement, PrefixExpression, Program, ReturnStatement, Statement, IfExpression, BlockStatement};
+use crate::ast::ast::{Expression, IdentifierExpression, LetStatement, PrefixExpression, Program, ReturnStatement, Statement, IfExpression, BlockStatement, FunctionLiteral};
 use crate::ast::ast::{ExpressionStatement, InfixExpression};
 use crate::lexer::Lexer;
 use crate::token::{Token, TokenType};
@@ -186,7 +186,7 @@ impl Parser {
             TokenType::RBRACE => {}
             TokenType::LT => {}
             TokenType::GT => {}
-            TokenType::FUNCTION => {}
+            TokenType::FUNCTION => {return Some(Parser::parse_fn);}
             TokenType::LET => {}
             TokenType::TRUE | TokenType::FALSE => {
                 return Some(Parser::parse_boolean);
@@ -197,6 +197,44 @@ impl Parser {
         }
 
         None
+    }
+
+    fn parse_fn(&mut self) -> ParseResult<Expression> {
+        if !self.expect_peek(&TokenType::LPAREN) {
+            return Err(format!("( not found in fn statement"));
+        }
+
+        let parameters = self.parse_fn_parameters()?;
+
+        if !self.expect_peek(&TokenType::LBRACE) {
+            return Err(format!("{{ not found in fn block"));
+        }
+
+        let body = self.parse_block_statement();
+
+        Ok(Expression::Fn(Box::new(FunctionLiteral { parameters, body })))
+    }
+
+    fn parse_fn_parameters(&mut self) -> ParseResult<Vec<IdentifierExpression>> {
+        let mut parameters = Vec::new();
+        if self.peek_token_is(&TokenType::RPAREN) {
+            self.next_token();
+            return Ok(parameters);
+        }
+        self.next_token();
+        let ident = IdentifierExpression { token: self.cur_token.clone(), value: self.cur_token.literal.to_string() };
+        parameters.push(ident);
+
+        while self.peek_token_is(&TokenType::COMMA) {
+            self.next_token();
+            self.next_token();
+            parameters.push(IdentifierExpression { token: self.cur_token.clone(), value: self.cur_token.literal.to_string() })
+        }
+        if !self.expect_peek(&TokenType::RPAREN) {
+            return Err(format!(") not found in fn parameters"));
+        }
+
+        Ok(parameters)
     }
 
     fn parse_if(&mut self) -> ParseResult<Expression> {
@@ -379,6 +417,112 @@ mod tests {
     use crate::ast::ast::Expression;
 
     use super::*;
+
+
+    #[test]
+    fn parse_fn_parameters(){
+        let tests = vec![("fn (){};",vec![]),("fn (x){};",vec!["x"]),("fn (x,y,z){};",vec!["x","y","z"])];
+
+
+        for (input, result_vector) in tests {
+            let lexer = Lexer::new(input.to_string());
+            let mut parser = Parser::new(lexer);
+            let mut program = Program::new();
+            program.parse_program(&mut parser);
+            check_parse_errors(&parser);
+
+            if program.statements.len() != 1 {
+                panic!("Program statements length is not 1.")
+            }
+
+            let stmt = program.statements.get(0).unwrap();
+            let stmt = match stmt {
+                Statement::Expression(st) => (*st).deref(),
+                _ => panic!("Not a expression statement;"),
+            };
+
+            let fn_literal = match &stmt.expression {
+                Expression::Fn(exp) => (*exp).deref(),
+                _ => panic!("not a function literal"),
+            };
+
+            let parameters = &fn_literal.parameters;
+
+            if parameters.len() != result_vector.len() {
+                panic!(format!("parameters length is {} and not {}.", parameters.len(),result_vector.len() ))
+            }
+
+            for (i,param) in parameters.iter().enumerate() {
+                assert_eq!(param.value , result_vector.get(i).unwrap().to_string());
+            }
+        }
+    }
+
+    #[test]
+    fn parse_function_literal(){
+        let input = "fn(x,y) { x + y; }";
+        let lexer = Lexer::new(input.to_string());
+        let mut parser = Parser::new(lexer);
+        let mut program = Program::new();
+        program.parse_program(&mut parser);
+        check_parse_errors(&parser);
+
+        if program.statements.len() != 1 {
+            panic!("Program statements length is not 1.")
+        }
+
+        let stmt = program.statements.get(0).unwrap();
+        let stmt = match stmt {
+            Statement::Expression(st) => (*st).deref(),
+            _ => panic!("Not a expression statement;"),
+        };
+
+        let fn_literal = match &stmt.expression {
+            Expression::Fn(exp) => (*exp).deref(),
+            _ => panic!("not a function literal"),
+        };
+
+        if fn_literal.parameters.len() != 2 {
+            panic!("parameters are not 2.")
+        }
+
+        let parameter1 = match fn_literal.parameters.get(0) {
+            None => { panic! ("Parameter 1 is None")}
+            Some(x) => { x }
+        };
+        let parameter2 = match fn_literal.parameters.get(1) {
+            None => { panic! ("Parameter 2 is None")}
+            Some(x) => { x }
+        };
+
+        assert_eq!(parameter1.value , "x" );
+        assert_eq!(parameter2.value , "y" );
+
+        let stmt = match &fn_literal.body.statements.get(0).unwrap() {
+            Statement::Expression(st) => (*st).deref(),
+            _ => panic!("Not a expression statement;"),
+        };
+
+        let infix_statement = match &stmt.expression {
+            Expression::Infix(ident) => (*ident).deref(),
+            _ => panic!("not a prefix statement"),
+        };
+
+        let left_expression = match &infix_statement.left {
+            Expression::Identifier(x) => x,
+            _ => panic!("left is not a identifier."),
+        };
+        let right_expression = match &infix_statement.right {
+            Expression::Identifier(x) => x,
+            _ => panic!("right is not a identifier."),
+        };
+
+        assert_eq!("x", *left_expression);
+        assert_eq!("+", infix_statement.operator);
+        assert_eq!("y", *right_expression);
+
+    }
+
     #[test]
     fn parse_if_else_expressions() {
         let input = "if (x < y) { x } else { y }";

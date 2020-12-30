@@ -37,6 +37,7 @@ pub enum Expression {
     Infix(Box<InfixExpression>),
     Boolean(bool),
     If(Box<IfExpression>),
+    Fn(Box<FunctionLiteral>),
 }
 
 impl Expression {
@@ -48,6 +49,7 @@ impl Expression {
             Expression::Infix(i) => i.to_string(),
             Expression::Boolean(i) => i.to_string(),
             Expression::If(i) => i.to_string(),
+            Expression::Fn(i) => i.to_string(),
         }
     }
 }
@@ -58,7 +60,7 @@ impl Display for Expression {
     }
 }
 
-pub struct FunctionalLiteral {
+pub struct FunctionLiteral {
     pub parameters: Vec<IdentifierExpression>,
     pub body: BlockStatement,
 }
@@ -219,7 +221,7 @@ pub struct IdentifierExpression {
 }
 
 impl Display for IdentifierExpression {
-    fn fmt(&self, _f: &mut Formatter<'_>) -> Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         write!(f, "{}", self.value)
     }
 }
