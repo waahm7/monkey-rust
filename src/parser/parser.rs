@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 use std::fmt::Debug;
-use std::num::ParseIntError; // Debug is located at std::fmt::Debug. So now we can just write 'Debug'.
+use std::num::ParseIntError;
 
 use crate::ast::ast::{
     BlockStatement, CallExpression, Expression, FunctionLiteral, IdentifierExpression,
@@ -120,7 +120,6 @@ impl Parser {
                 }
             }
         }
-
         return Ok(left_exp);
     }
 
@@ -135,7 +134,6 @@ impl Parser {
             TokenType::LT => Some(Parser::parse_infix_expression),
             TokenType::GT => Some(Parser::parse_infix_expression),
             TokenType::LPAREN => Some(Parser::parse_call_expression),
-
             _ => None,
         };
     }
@@ -994,6 +992,7 @@ mod tests {
         if program.statements.len() != 3 {
             panic!("Program statements length is not 3.")
         }
+
         let result: Vec<i64> = vec![5, 10, 993322];
         for (i, statement) in program.statements.iter().enumerate() {
             match statement {

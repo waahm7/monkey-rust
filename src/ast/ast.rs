@@ -5,14 +5,14 @@ use std::vec::Vec;
 use crate::parser::parser::{ParseResult, Parser};
 use crate::token::{Token, TokenType};
 
-// pub enum Node {
-//     Program(Box<Program>),
-//     Statement(Box<Statement>),
-//     Expression(Box<Expression>),
-// }
+#[derive(Debug)]
+pub enum Node {
+    Program(Box<Program>),
+    Statement(Box<Statement>),
+    Expression(Box<Expression>),
+}
 
-// impl Node {}
-//
+#[derive(Debug)]
 pub enum Statement {
     Let(Box<LetStatement>),
     Return(Box<ReturnStatement>),
@@ -30,6 +30,7 @@ impl Display for Statement {
     }
 }
 
+#[derive(Debug)]
 pub enum Expression {
     Identifier(String),
     Integer(i64),
@@ -62,6 +63,7 @@ impl Display for Expression {
     }
 }
 
+#[derive(Debug)]
 pub struct CallExpression {
     pub function: Expression,
     pub arguments: Vec<Expression>,
@@ -77,6 +79,7 @@ impl Display for CallExpression {
     }
 }
 
+#[derive(Debug)]
 pub struct FunctionLiteral {
     pub parameters: Vec<IdentifierExpression>,
     pub body: BlockStatement,
@@ -92,6 +95,7 @@ impl Display for FunctionLiteral {
     }
 }
 
+#[derive(Debug)]
 pub struct IfExpression {
     pub condition: Expression,
     pub consequence: BlockStatement,
@@ -108,6 +112,7 @@ impl Display for IfExpression {
     }
 }
 
+#[derive(Debug)]
 pub struct BlockStatement {
     pub statements: Vec<Statement>,
 }
@@ -121,6 +126,7 @@ impl Display for BlockStatement {
     }
 }
 
+#[derive(Debug)]
 pub struct InfixExpression {
     pub left: Expression,
     pub operator: String,
@@ -133,6 +139,7 @@ impl Display for InfixExpression {
     }
 }
 
+#[derive(Debug)]
 pub struct PrefixExpression {
     pub operator: String,
     pub right: Expression,
@@ -144,6 +151,7 @@ impl Display for PrefixExpression {
     }
 }
 
+#[derive(Debug)]
 pub struct ExpressionStatement {
     pub expression: Expression,
 }
@@ -154,6 +162,7 @@ impl Display for ExpressionStatement {
     }
 }
 
+#[derive(Debug)]
 pub struct Program {
     pub statements: Vec<Statement>,
 }
@@ -189,6 +198,7 @@ impl Display for Program {
     }
 }
 
+#[derive(Debug)]
 pub struct LetStatement {
     pub token: Token,
     pub name: IdentifierExpression,
@@ -206,6 +216,7 @@ impl Display for LetStatement {
     }
 }
 
+#[derive(Debug)]
 pub struct ReturnStatement {
     pub token: Token,
     pub return_value: Expression,
@@ -235,6 +246,7 @@ impl Display for ReturnStatement {
 //     pub value: i64,
 // }
 
+#[derive(Debug)]
 pub struct IdentifierExpression {
     pub token: Token,
     pub value: String,
