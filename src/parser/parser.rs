@@ -4,10 +4,7 @@ use std::collections::HashMap;
 use std::fmt::Debug;
 use std::num::ParseIntError;
 
-use crate::ast::ast::{
-    BlockStatement, CallExpression, Expression, FunctionLiteral, IdentifierExpression,
-    IfExpression, LetStatement, PrefixExpression, Program, ReturnStatement, Statement,
-};
+use crate::ast::ast::{BlockStatement, CallExpression, Expression, FunctionLiteral, IdentifierExpression, IfExpression, LetStatement, PrefixExpression, Program, ReturnStatement, Statement, Node};
 use crate::ast::ast::{ExpressionStatement, InfixExpression};
 use crate::lexer::Lexer;
 use crate::token::{Token, TokenType};
@@ -55,6 +52,7 @@ pub struct Parser {
     pub errors: Vec<String>,
 }
 
+
 impl Parser {
     pub fn new(lexer: Lexer) -> Parser {
         let mut parser = Parser {
@@ -72,6 +70,21 @@ impl Parser {
         parser.next_token();
         parser.next_token();
         parser
+    }
+
+    pub fn parse_program(&mut self) -> Program {
+        let mut program = Program::new();
+        while self.cur_token.type_token != TokenType::EOF {
+            let statement: ParseResult<Statement> = self.parse_statement();
+            match statement {
+                Err(_) => {}
+                Ok(x) => {
+                    program.statements.push(x);
+                }
+            }
+            self.next_token();
+        }
+        program
     }
 
     pub fn next_token(&mut self) {
@@ -467,8 +480,7 @@ mod tests {
         let input = "add(1, 2 * 3, 4 + 5);";
         let lexer = Lexer::new(input.to_string());
         let mut parser = Parser::new(lexer);
-        let mut program = Program::new();
-        program.parse_program(&mut parser);
+        let mut program = parser.parse_program();
         check_parse_errors(&parser);
 
         if program.statements.len() != 1 {
@@ -522,8 +534,7 @@ mod tests {
         for (input, result_vector) in tests {
             let lexer = Lexer::new(input.to_string());
             let mut parser = Parser::new(lexer);
-            let mut program = Program::new();
-            program.parse_program(&mut parser);
+        let mut program = parser.parse_program();
             check_parse_errors(&parser);
 
             if program.statements.len() != 1 {
@@ -562,8 +573,8 @@ mod tests {
         let input = "fn(x,y) { x + y; }";
         let lexer = Lexer::new(input.to_string());
         let mut parser = Parser::new(lexer);
-        let mut program = Program::new();
-        program.parse_program(&mut parser);
+        let mut program = parser.parse_program();
+
         check_parse_errors(&parser);
 
         if program.statements.len() != 1 {
@@ -630,8 +641,8 @@ mod tests {
         let input = "if (x < y) { x } else { y }";
         let lexer = Lexer::new(input.to_string());
         let mut parser = Parser::new(lexer);
-        let mut program = Program::new();
-        program.parse_program(&mut parser);
+        let mut program = parser.parse_program();
+
         check_parse_errors(&parser);
 
         if program.statements.len() != 1 {
@@ -704,8 +715,8 @@ mod tests {
         let input = "if (x < y) { x }";
         let lexer = Lexer::new(input.to_string());
         let mut parser = Parser::new(lexer);
-        let mut program = Program::new();
-        program.parse_program(&mut parser);
+        let mut program = parser.parse_program();
+
         check_parse_errors(&parser);
 
         if program.statements.len() != 1 {
@@ -791,8 +802,8 @@ mod tests {
         for (input, expected) in tests {
             let lexer = Lexer::new(input.to_string());
             let mut parser = Parser::new(lexer);
-            let mut program = Program::new();
-            program.parse_program(&mut parser);
+            let mut program = parser.parse_program();
+    
             check_parse_errors(&parser);
             assert_eq!(expected, program.to_string());
         }
@@ -813,8 +824,8 @@ mod tests {
         for (input, left, operator, right) in prefix_tests {
             let lexer = Lexer::new(input.to_string());
             let mut parser = Parser::new(lexer);
-            let mut program = Program::new();
-            program.parse_program(&mut parser);
+            let mut program = parser.parse_program();
+    
             check_parse_errors(&parser);
 
             if program.statements.len() != 1 {
@@ -851,8 +862,8 @@ mod tests {
         for (input, operator, value) in prefix_tests {
             let lexer = Lexer::new(input.to_string());
             let mut parser = Parser::new(lexer);
-            let mut program = Program::new();
-            program.parse_program(&mut parser);
+            let mut program = parser.parse_program();
+    
             check_parse_errors(&parser);
 
             if program.statements.len() != 1 {
@@ -886,8 +897,8 @@ mod tests {
         for (input, operator, int_value) in prefix_tests {
             let lexer = Lexer::new(input.to_string());
             let mut parser = Parser::new(lexer);
-            let mut program = Program::new();
-            program.parse_program(&mut parser);
+            let mut program = parser.parse_program();
+    
             check_parse_errors(&parser);
 
             if program.statements.len() != 1 {
@@ -924,8 +935,8 @@ mod tests {
         );
         let lexer = Lexer::new(input);
         let mut parser = Parser::new(lexer);
-        let mut program = Program::new();
-        program.parse_program(&mut parser);
+        let mut program = parser.parse_program();
+
         check_parse_errors(&parser);
 
         if program.statements.len() != 1 {
@@ -954,8 +965,8 @@ mod tests {
         );
         let lexer = Lexer::new(input);
         let mut parser = Parser::new(lexer);
-        let mut program = Program::new();
-        program.parse_program(&mut parser);
+        let mut program = parser.parse_program();
+
         check_parse_errors(&parser);
 
         if program.statements.len() != 1 {
@@ -985,8 +996,8 @@ mod tests {
         );
         let lexer = Lexer::new(input);
         let mut parser = Parser::new(lexer);
-        let mut program = Program::new();
-        program.parse_program(&mut parser);
+        let mut program = parser.parse_program();
+
         check_parse_errors(&parser);
 
         if program.statements.len() != 3 {
@@ -1016,8 +1027,8 @@ mod tests {
         );
         let lexer = Lexer::new(input);
         let mut parser = Parser::new(lexer);
-        let mut program = Program::new();
-        program.parse_program(&mut parser);
+        let mut program = parser.parse_program();
+
         check_parse_errors(&parser);
 
         if program.statements.len() != 3 {

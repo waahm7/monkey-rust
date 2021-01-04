@@ -22,8 +22,7 @@ pub fn start() {
         }
         let mut lexer = Lexer::new(line);
         let mut parser = Parser::new(lexer);
-        let mut program = Program::new();
-        program.parse_program(&mut parser);
+        let mut program = parser.parse_program();
         if parser.errors.len() > 0 {
             println!("{:?}", parser.errors);
             continue;

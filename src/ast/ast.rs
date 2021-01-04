@@ -173,20 +173,6 @@ impl Program {
             statements: Vec::new(),
         }
     }
-
-    pub fn parse_program(&mut self, parser: &mut Parser) {
-        self.statements = Vec::new();
-        while parser.cur_token.type_token != TokenType::EOF {
-            let statement: ParseResult<Statement> = parser.parse_statement();
-            match statement {
-                Err(_) => {}
-                Ok(x) => {
-                    self.statements.push(x);
-                }
-            }
-            parser.next_token();
-        }
-    }
 }
 
 impl Display for Program {

@@ -67,8 +67,7 @@ mod tests {
     fn test_eval(input: String) -> Object {
         let lexer = Lexer::new(input);
         let mut parser = Parser::new(lexer);
-        let mut program = Program::new();
-        program.parse_program(&mut parser);
+        let mut program = parser.parse_program();
         return eval(&Node::Program(Box::new(program)));
     }
 
