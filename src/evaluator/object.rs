@@ -12,15 +12,15 @@ impl Object {
         return match self {
             Object::Integer(i) => i.to_string(),
             Object::Boolean(i) => i.to_string(),
-            Object::Null => String::from("null"),
+            Object::Null => String::from("NULL"),
         };
     }
 
     pub fn get_type(&self) -> String {
         match self {
-            Object::Integer(_) => String::from("Integer"),
-            Object::Boolean(_) => String::from("Boolean"),
-            Object::Null => String::from("null"),
+            Object::Integer(_) => String::from("INTEGER"),
+            Object::Boolean(_) => String::from("BOOLEAN"),
+            Object::Null => String::from("NULL"),
         }
     }
 }

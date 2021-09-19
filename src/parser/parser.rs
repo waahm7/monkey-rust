@@ -4,7 +4,10 @@ use std::collections::HashMap;
 use std::fmt::Debug;
 use std::num::ParseIntError;
 
-use crate::ast::ast::{BlockStatement, CallExpression, Expression, FunctionLiteral, IdentifierExpression, IfExpression, LetStatement, PrefixExpression, Program, ReturnStatement, Statement, Node};
+use crate::ast::ast::{
+    BlockStatement, CallExpression, Expression, FunctionLiteral, IdentifierExpression,
+    IfExpression, LetStatement, Node, PrefixExpression, Program, ReturnStatement, Statement,
+};
 use crate::ast::ast::{ExpressionStatement, InfixExpression};
 use crate::lexer::Lexer;
 use crate::token::{Token, TokenType};
@@ -51,7 +54,6 @@ pub struct Parser {
     pub peek_token: Token,
     pub errors: Vec<String>,
 }
-
 
 impl Parser {
     pub fn new(lexer: Lexer) -> Parser {
@@ -534,7 +536,7 @@ mod tests {
         for (input, result_vector) in tests {
             let lexer = Lexer::new(input.to_string());
             let mut parser = Parser::new(lexer);
-        let mut program = parser.parse_program();
+            let mut program = parser.parse_program();
             check_parse_errors(&parser);
 
             if program.statements.len() != 1 {
@@ -803,7 +805,7 @@ mod tests {
             let lexer = Lexer::new(input.to_string());
             let mut parser = Parser::new(lexer);
             let mut program = parser.parse_program();
-    
+
             check_parse_errors(&parser);
             assert_eq!(expected, program.to_string());
         }
@@ -825,7 +827,7 @@ mod tests {
             let lexer = Lexer::new(input.to_string());
             let mut parser = Parser::new(lexer);
             let mut program = parser.parse_program();
-    
+
             check_parse_errors(&parser);
 
             if program.statements.len() != 1 {
@@ -863,7 +865,7 @@ mod tests {
             let lexer = Lexer::new(input.to_string());
             let mut parser = Parser::new(lexer);
             let mut program = parser.parse_program();
-    
+
             check_parse_errors(&parser);
 
             if program.statements.len() != 1 {
@@ -898,7 +900,7 @@ mod tests {
             let lexer = Lexer::new(input.to_string());
             let mut parser = Parser::new(lexer);
             let mut program = parser.parse_program();
-    
+
             check_parse_errors(&parser);
 
             if program.statements.len() != 1 {

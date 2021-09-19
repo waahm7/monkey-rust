@@ -1,4 +1,5 @@
-use crate::ast::ast::Program;
+use crate::ast::ast::{Expression, Node, Program, Statement};
+use crate::evaluator::evaluator;
 use crate::lexer::Lexer;
 use crate::parser::parser::Parser;
 use crate::token::TokenType;
@@ -27,6 +28,12 @@ pub fn start() {
             println!("{:?}", parser.errors);
             continue;
         }
-        println!("{}", program.to_string());
+
+        let mut evaluated = evaluator::eval(&Node::Program(Box::new(program)));
+        if let Some(x) = evaluated {
+            println!("{}", x.inspect());
+        }
+
+        //println!("{}", program.to_string());
     }
 }
